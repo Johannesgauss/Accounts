@@ -24,11 +24,14 @@ async function obtainAccountNameFromUser()
 
 export async function consultBalance()
 {
-	const account = await obtainAccountNameFromUser()
+    const account = await obtainAccountNameFromUser()
+    if (!account) return // Added guard clause in case account doesn't exist
 
-	console.log(chalk.green(`Saldo da conta ${account.name}: `), chalk.blue(account.balance))
+    const dollars = Math.floor(account.balance / 100)
+    const cents = String(account.balance % 100).padStart(2, '0')
+
+    console.log(`${chalk.green(`Saldo da conta ${account.name}: `)}${chalk.blue(dollars)}.${chalk.blue(cents)}`)
 }
-
 export async function deposit()
 {
 
@@ -43,8 +46,15 @@ export async function deposit()
 				message: 'How many money do you want to deposit?: R$'
 			}
 		])
-	const depositment = parseFloat(answer.amount, 10)
-	account.balance += depositment
+
+	let moneyToCents = 1
+	if (!answer.amount.includes('.') && !answer.amount.includes(','))
+		moneyToCents = 100	
+	let money_str = answer.amount.replace(/[.,]/g, "")
+	let deposit = parseInt(money_str, 10)
+	deposit *= moneyToCents	
+
+	account.balance += deposit
 	try {
 		fs.writeFileSync(
 			`Accounts/${account.name}.json`,
@@ -72,8 +82,13 @@ export async function yankOut()
 				message: 'How many money do you want to yank out?: R$'
 			}
 		])
-	const yankout = parseFloat(answer.amount, 10)
-	if (account.balance > yankout) {
+	let moneyToCents = 1
+	if (!answer.amount.includes('.') && !answer.amount.includes(','))
+		moneyToCents = 100	
+	let money_str = answer.amount.replace(/[.,]/g, "")
+	let yankout = parseInt(money_str, 10)
+	yankout *= moneyToCents	
+	if (account.balance >= yankout) {
 		account.balance -= yankout
 	} else {
 		console.log(chalk.bgBlack.red("You do not have enough money."))

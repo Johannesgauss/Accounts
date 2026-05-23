@@ -1,10 +1,12 @@
 {
 	"Name": "Accounts",
 	"main": "index.js",
+	"type": "module",
 	"scripts": {
 		"start": "node index.js"
 	},
 	"dependencies": {
+		"@inquirer/prompts": "8.4.3",
 		"chalk": "5.6.2",
 		"inquirer": "13.4.3"
 	}

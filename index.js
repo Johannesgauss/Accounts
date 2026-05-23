@@ -1,73 +1,50 @@
-import { input, select } from '@inquirer/prompts'
 import inquirer from 'inquirer'
-import chalk from 'chalk'
-import fs from 'fs'
+import { createAccount} from './accountManager.js'
+import { consultBalance, deposit, yankOut } from "./balance.js"
 
-operation()
-function operation()
-{
-	inquirer.prompt([
-		{
-			type: 'select',
-			name: 'action',
-			message: 'What do you wish to do?',
-			choices: [
-				'Create account',
-				'Consult balance',
-				'Deposit',
-				'Yank out',
-				'Exit'
-			],
-		},
-	]).then((answers) => {
-		if (answers['action'] == 'Create account')
-			createAccount();
-	}).catch((err) => {
-		console.log("Cê é burro, cara! Que loucura!")
-	})
-}
+// Fiz desse jeito pois, assim, não haverá uma cadeia de chamadas de funções
+// e, consequentemente, um uso muito grande de memória devido à
+// grande quantidade de empilhamentos.
 
-function createAccount()
-{
-	console.log(chalk.green('Define the options of your account as follows:'))
+main()
+async function main() {
+    try {
+        const answers = await inquirer.prompt([
+            {
+                type: 'select',
+                name: 'action',
+                message: 'O que desejas fazer?',
+                choices: [
+                    'Criar conta',
+                    'Consultar saldo',
+                    'Depósito',
+                    'Sacar',
+                    'Sair'
+                ],
+            },
+        ])
 
-	inquirer
-		.prompt([
-			{
-				name: 'accountName',
-				message: 'Digit a nome for your account: ',
-			},
-		]).then((answers) => buildAccount(answers))
-		.catch((err) => {
-			console.log(chalk.bgBlack.red("ERROR! " + err))
-		})
-}
+        // Executa a ação baseada na escolha
+        switch (answers.action) {
+            case 'Criar conta':
+                await createAccount()
+                break
+            case 'Consultar saldo':
+                await consultBalance()
+                break
+            case 'Depósito':
+                await deposit()
+                break
+            case 'Sacar':
+                await yankOut()
+                break
+            case 'Sair':
+                process.exit(0)
+        }
 
-async function buildAccount(informations)
-{
-	const accountName = informations['accountName']
+        main()
 
-	console.info(accountName)
-
-	if (!fs.existsSync('Accounts')) {
-		fs.mkdirSync('Accounts')
-	}
-
-	const accountData= {
-		name: accountName,
-		balance: 0
-	}
-
-	try {
-		fs.writeFileSync(
-			`Accounts/${accountName}.json`,
-			JSON.stringify(accountData, null, 2),
-			'utf8'
-		)
-		console.log(chalk.green(`Sucess! Account ${accountName} created!`))
-	} catch(err) {
-		console.log(chalk.bgBlack.red("ERROR!: " + err))
-	}
-
-	return
+    } catch (err) {
+        console.log(err)
+    }
 }
